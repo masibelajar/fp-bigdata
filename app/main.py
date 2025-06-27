@@ -38,3 +38,14 @@ def health_check():
             "spark": "ready"
         }
     }
+    
+import time
+from sqlalchemy.exc import OperationalError
+
+for _ in range(5):
+    try:
+        Base.metadata.create_all(bind=engine)
+        break
+    except OperationalError:
+        print("Database not ready, retrying...")
+        time.sleep(3)

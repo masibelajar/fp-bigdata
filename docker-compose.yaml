@@ -6,18 +6,20 @@ services:
     image: postgres:15
     restart: always
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: strongpassword
       POSTGRES_DB: fp_bigdata
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "user"]
+      test: ["CMD", "pg_isready", "-U", "[postgres]"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - default
 
   # MinIO Object Storage
   minio:
@@ -36,6 +38,8 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
+    networks:
+      - default
 
   # Zookeeper for Kafka
   zookeeper:
@@ -44,6 +48,8 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
       - "2181:2181"
+    networks:
+      - default
 
   # Kafka Message Broker
   kafka:
@@ -60,6 +66,8 @@ services:
       - "29092:29092"
     depends_on:
       - zookeeper
+    networks:
+      - default  
 
   # Spark Master
   spark-master:
@@ -77,6 +85,8 @@ services:
     volumes:
       - ./services:/opt/bitnami/spark/services
       - ./data:/opt/bitnami/spark/data
+    networks:
+      - default
 
   # Spark Worker
   spark-worker:
@@ -92,6 +102,8 @@ services:
     volumes:
       - ./services:/opt/bitnami/spark/services
       - ./data:/opt/bitnami/spark/data
+    networks:
+      - default
 
   # FastAPI Application
   api:
@@ -106,9 +118,16 @@ services:
     volumes:
       - .:/app
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/fp_bigdata
-      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      DATABASE_URL: postgresql://postgres:strongpassword@postgres:5432/fp_bigdata
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
+      SPARK_MASTER_URL: spark://spark-master:7077
+    extra_hosts:
+      - "kafka:127.0.0.1"
     restart: always
+
 
   # Streamlit Dashboard
   dashboard:
@@ -123,6 +142,10 @@ services:
       - ./dashboard:/app/dashboard
     environment:
       - API_BASE_URL=http://api:8000
+
+networks:
+  default:
+    name: fp-bigdata-net
 
 volumes:
   postgres_data:
