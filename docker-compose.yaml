@@ -14,7 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "[postgres]"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -53,7 +53,7 @@ services:
 
   # Kafka Message Broker
   kafka:
-    image: bitnami/kafka:latest
+    image: bitnami/kafka:3.5  # <--- This is the corrected line
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
@@ -67,7 +67,7 @@ services:
     depends_on:
       - zookeeper
     networks:
-      - default  
+      - default
 
   # Spark Master
   spark-master:
@@ -106,6 +106,7 @@ services:
       - default
 
   # FastAPI Application
+  # FastAPI Application
   api:
     build: .
     ports:
@@ -124,10 +125,8 @@ services:
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: password123
       SPARK_MASTER_URL: spark://spark-master:7077
-    extra_hosts:
-      - "kafka:127.0.0.1"
+    # extra_hosts section has been removed
     restart: always
-
 
   # Streamlit Dashboard
   dashboard:
