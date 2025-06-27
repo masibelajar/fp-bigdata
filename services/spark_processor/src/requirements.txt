@@ -1,0 +1,3 @@
+delta-spark
+psycopg2-binary
+s3fs

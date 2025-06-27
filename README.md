@@ -3,8 +3,11 @@
 =======
 # YAAAAAAA
 
-1. `docker-compose up -d`
-2. `http://localhost:9001`
+1. `docker-compose up --build -d`
+2. `localhost:9091`
+3. Buat bucket `datalake` & `landing-zone` di MinIO`
+5. `docker-compose exec spark-master spark-submit --master spark://spark-master:7077 --jars /opt/bitnami/spark/jars/delta-core_2.12-2.4.0.jar,/opt/bitnami/spark/jars/delta-storage-2.4.0.jar,/opt/bitnami/spark/jars/hadoop-aws-3.3.4.jar,/opt/bitnami/spark/jars/spark-sql-kafka-0-10_2.12-3.4.0.jar /opt/bitnami/spark/services/spark_processor/src/batch_etl.py`
+6. upload dataset ke landing-zone
 
 
 # FP_BigData
