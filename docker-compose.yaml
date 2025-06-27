@@ -26,8 +26,8 @@ services:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: password123
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -43,7 +43,7 @@ services:
 
   # Zookeeper for Kafka
   zookeeper:
-    image: bitnami/zookeeper:latest
+    image: bitnami/zookeeper:3.8 # DIPERBAIKI: Versi dipin untuk stabilitas
     environment:
       - ALLOW_ANONYMOUS_LOGIN=yes
     ports:
@@ -53,7 +53,7 @@ services:
 
   # Kafka Message Broker
   kafka:
-    image: bitnami/kafka:3.5  # <--- This is the corrected line
+    image: bitnami/kafka:3.5
     environment:
       - KAFKA_BROKER_ID=1
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
@@ -71,17 +71,13 @@ services:
 
   # Spark Master
   spark-master:
-    image: bitnami/spark:3.4
+    build: ./services/spark_processor # DIPERBAIKI: Build image custom dari Dockerfile
     command: bin/spark-class org.apache.spark.deploy.master.Master
     environment:
       - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
     ports:
-      - "8080:8080"  # Spark Master Web UI
-      - "7077:7077"  # Spark Master Port
+      - "8080:8080"
+      - "7077:7077"
     volumes:
       - ./services:/opt/bitnami/spark/services
       - ./data:/opt/bitnami/spark/data
@@ -90,7 +86,7 @@ services:
 
   # Spark Worker
   spark-worker:
-    image: bitnami/spark:3.4
+    build: ./services/spark_processor # DIPERBAIKI: Build image custom dari Dockerfile
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
@@ -105,7 +101,6 @@ services:
     networks:
       - default
 
-  # FastAPI Application
   # FastAPI Application
   api:
     build: .
@@ -125,7 +120,7 @@ services:
       MINIO_ACCESS_KEY: admin
       MINIO_SECRET_KEY: password123
       SPARK_MASTER_URL: spark://spark-master:7077
-    # extra_hosts section has been removed
+    # DIPERBAIKI: extra_hosts dihapus untuk memperbaiki koneksi ke Kafka
     restart: always
 
   # Streamlit Dashboard
@@ -142,6 +137,34 @@ services:
     environment:
       - API_BASE_URL=http://api:8000
 
+  # DITAMBAHKAN: Service untuk streaming data dari MinIO ke Kafka
+  minio-producer:
+    build: .
+    command: python -u services/minio_streamer/producer.py
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: password123
+    depends_on:
+      - minio
+      - kafka
+    networks:
+      - default
+    restart: on-failure
+
+  # DITAMBAHKAN: Service untuk mendengarkan stream dari Kafka
+  stream-consumer:
+    build: .
+    command: python -u services/minio_streamer/consumer.py
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - default
+    restart: on-failure
+
 networks:
   default:
     name: fp-bigdata-net
@@ -149,3 +172,12 @@ networks:
 volumes:
   postgres_data:
   minio_data:
+
+### Langkah Selanjutnya
+
+# 1.  **Ganti** seluruh isi `docker-compose.yaml` Anda dengan kode di atas.
+# 2.  **Jalankan ulang** seluruh stack Anda dengan perintah `build` untuk memastikan semua perubahan diterapkan:
+
+#     docker-compose up --build -d
+
+# Setelah ini, seluruh environment Anda sudah dikonfigurasi dengan benar sesuai dengan semua yang telah kita diskusik
