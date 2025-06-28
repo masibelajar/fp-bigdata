@@ -242,14 +242,14 @@ Products - Categorical columns (4):
 
 ## Setup & Run Project
 
-### 1. 🧰 Clone Repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/<your-username>/FP_BigData.git
 cd FP_BigData
 ```
 
-### 2. 📝 Setup Environment Variables
+### 2. Setup Environment Variables
 
 Buat file .env di root project dengan isi berikut:
 
@@ -263,7 +263,7 @@ KAFKA_TOPIC=my_topic_name
 ```
 Gantilah "my_topic_name" sesuai dengan nama topik yang digunakan di aplikasi Kafka pribadi.
 
-### 3. 🐳 Jalankan dengan Docker Compose
+### 3. Jalankan dengan Docker Compose
 ```bash
 docker-compose up --build
 ```
@@ -274,7 +274,7 @@ Jika ingin membersihkan container dan volume:
 docker-compose down --volumes
 ```
 
-### 🌐 API Endpoint
+### API Endpoint
 Setelah service jalan, akses dokumentasi API di:
 
 ```bash
@@ -283,10 +283,10 @@ http://localhost:8000/docs
 FastAPI akan menampilkan dokumentasi interaktif Swagger UI.
 
 # Buka semua antarmuka
-start http://localhost:8000/docs      # API Swagger
-start http://localhost:8501           # Streamlit Dashboard
-start http://localhost:9001           # MinIO Console
-start http://localhost:8080           # Spark UI
+- start http://localhost:8000/docs      # API Swagger
+- start http://localhost:8501           # Streamlit Dashboard
+- start http://localhost:9001           # MinIO Console
+- start http://localhost:8080           # Spark UI
 
 ## API Endpoint Testing
 ```bash
@@ -375,8 +375,27 @@ cd ../streaming
 bash test_streaming.sh
 bash ../test_script.sh
 ```
+### Swagger API Documentation
+![Swagger](img/IMG-20250628-WA0031.jpg)
+
+### Kafka Consumer - Realtime Events
+![Kafka Consumer](img/IMG-20250628-WA0026.jpg)
+
+### MinIO Bucket - CSV Review Processed
+![MinIO Processed](img/IMG-20250628-WA0027.jpg)
+
+### MinIO Bucket - Landing Zone Interactions
+![MinIO Interactions](img/IMG-20250628-WA0028.jpg)
+
+### Streaming Recommendation Output
+![Streaming Output](img/IMG-20250628-WA0029.jpg)
+
+### System Metrics Output
+![System Metrics](img/IMG-20250628-WA0032.jpg)
+
+### CSV Streaming Logs
+![CSV Streaming](img/IMG-20250628-WA0033.jpg)
 
 Notes:
 1. Kafka Flow: Aplikasi ini menggunakan Kafka untuk menerima atau mengirim stream data secara real-time. Kafka topic dan broker dikonfigurasi melalui environment variable (.env).
 2. Pastikan tidak ada proses lain yang menggunakan port 5432 (PostgreSQL), 2181 (Zookeeper), 9092 (Kafka), dan 8000 (FastAPI). Cek status dengan `docker ps`
->>>>>>> 6439abe (commit)
