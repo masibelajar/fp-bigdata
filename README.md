@@ -1,5 +1,4 @@
 # FP Big Data - Recommendation System & Streaming Analytics
-
 Proyek ini mengimplementasikan sistem rekomendasi dan analisis perilaku pengguna berbasis Big Data. Dibangun dengan FastAPI, Kafka, Spark, MinIO, dan Streamlit.
 
 **Kelompok 10**
@@ -288,6 +287,8 @@ FastAPI akan menampilkan dokumentasi interaktif Swagger UI.
 - start http://localhost:9001           # MinIO Console
 - start http://localhost:8080           # Spark UI
 
+#
+
 ## API Endpoint Testing
 ```bash
 curl -s http://localhost:8000/health | python -m json.tool
@@ -375,6 +376,7 @@ cd ../streaming
 bash test_streaming.sh
 bash ../test_script.sh
 ```
+# 
 
 ### Infrastructure Status Check
 ![Infrastructure Status Check](img/IMG-20250628-WA0018.jpg)
@@ -485,6 +487,8 @@ Heatmap interaktif yang memperlihatkan pola aktivitas pengguna sepanjang hari at
 ![Trend Analysis](img/IMG-20250628-WA0017.jpg)
 
 Analisis visual tren produk populer berdasarkan waktu dan kategori, membantu menyusun strategi rekomendasi.
+
+#
 
 Notes:
 1. Kafka Flow: Aplikasi ini menggunakan Kafka untuk menerima atau mengirim stream data secara real-time. Kafka topic dan broker dikonfigurasi melalui environment variable (.env).
