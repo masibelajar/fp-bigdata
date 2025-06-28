@@ -1,4 +1,4 @@
-# 📦 FP Big Data - Recommendation System & Streaming Analytics
+# FP Big Data - Recommendation System & Streaming Analytics
 
 Proyek ini mengimplementasikan sistem rekomendasi dan analisis perilaku pengguna berbasis Big Data. Dibangun dengan FastAPI, Kafka, Spark, MinIO, dan Streamlit.
 
@@ -284,6 +284,100 @@ http://localhost:8000/docs
 ```
 FastAPI akan menampilkan dokumentasi interaktif Swagger UI.
 
+## API Endpoint Testing
+
+```bash
+curl -s http://localhost:8000/health | python -m json.tool
+```
+
+Rekomendasi user
+```bash
+curl -s "http://localhost:8000/recommendations/user/1?limit=5" | python -m json.tool
+```
+
+Produk serupa
+```bash
+curl -s "http://localhost:8000/recommendations/similar/B001LAPTOP" | python -m json.tool
+```
+
+Trending produk
+```bash
+curl -s "http://localhost:8000/recommendations/trending?limit=5" | python -m json.tool
+```
+
+Analitik perilaku pengguna
+``` bash
+curl -s http://localhost:8000/analytics/user_behavior | python -m json.tool
+```
+
+Metrics sistem
+```bash
+curl -s http://localhost:8000/system/metrics | python -m json.tool
+```
+
+Streaming rekomendasi
+```bash
+curl -N "http://localhost:8000/stream/recommendations/1"
+```
+
+Streaming analytics real-time
+```bash
+curl -N "http://localhost:8000/stream/analytics"
+```
+
+Kirim event pengguna
+```bash
+curl -X POST "http://localhost:8000/stream/events" \
+     -H "Content-Type: application/json" \
+     -d '[
+        {"user_id": 1, "action": "view", "product_id": "B001LAPTOP"},
+        {"user_id": 2, "action": "purchase", "product_id": "B002MOUSE"}
+    ]' | python -m json.tool
+```
+
+## Streaming Test & Dashboard
+```bash
+cd streaming
+```
+
+Install dependensi
+```bash
+pip install kafka-python minio pandas
+```
+
+Jalankan Kafka consumer
+```bash
+python kafka_consumer.py
+```
+
+Jalankan Kafka producer
+```bash
+python kafka_producer.py
+```
+
+Jalankan demo streaming
+```bash
+python demo_streaming.py
+```
+
+Jalankan automation test
+```bash
+cd ../scripts
+python demo_automation.py
+```
+
+Jalankan semua test
+```bash
+cd ../streaming
+bash test_streaming.sh
+bash ../test_script.sh
+```
+
+# Buka semua antarmuka
+start http://localhost:8000/docs      # API Swagger
+start http://localhost:8501           # Streamlit Dashboard
+start http://localhost:9001           # MinIO Console
+start http://localhost:8080           # Spark UI
 Notes:
 1. Kafka Flow: Aplikasi ini menggunakan Kafka untuk menerima atau mengirim stream data secara real-time. Kafka topic dan broker dikonfigurasi melalui environment variable (.env).
 2. Pastikan tidak ada proses lain yang menggunakan port 5432 (PostgreSQL), 2181 (Zookeeper), 9092 (Kafka), dan 8000 (FastAPI). Cek status dengan `docker ps`
