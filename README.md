@@ -2,8 +2,6 @@
 
 Proyek ini mengimplementasikan sistem rekomendasi dan analisis perilaku pengguna berbasis Big Data. Dibangun dengan FastAPI, Kafka, Spark, MinIO, dan Streamlit.
 
-=======
-
 **Kelompok 10**
 
 | Nama                      | NRP        |
@@ -284,8 +282,13 @@ http://localhost:8000/docs
 ```
 FastAPI akan menampilkan dokumentasi interaktif Swagger UI.
 
-## API Endpoint Testing
+# Buka semua antarmuka
+start http://localhost:8000/docs      # API Swagger
+start http://localhost:8501           # Streamlit Dashboard
+start http://localhost:9001           # MinIO Console
+start http://localhost:8080           # Spark UI
 
+## API Endpoint Testing
 ```bash
 curl -s http://localhost:8000/health | python -m json.tool
 ```
@@ -373,11 +376,6 @@ bash test_streaming.sh
 bash ../test_script.sh
 ```
 
-# Buka semua antarmuka
-start http://localhost:8000/docs      # API Swagger
-start http://localhost:8501           # Streamlit Dashboard
-start http://localhost:9001           # MinIO Console
-start http://localhost:8080           # Spark UI
 Notes:
 1. Kafka Flow: Aplikasi ini menggunakan Kafka untuk menerima atau mengirim stream data secara real-time. Kafka topic dan broker dikonfigurasi melalui environment variable (.env).
 2. Pastikan tidak ada proses lain yang menggunakan port 5432 (PostgreSQL), 2181 (Zookeeper), 9092 (Kafka), dan 8000 (FastAPI). Cek status dengan `docker ps`
