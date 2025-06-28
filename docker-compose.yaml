@@ -1,30 +1,31 @@
 version: '3.8'
 
+networks:
+  default:
+    driver: bridge
+
 services:
-  # PostgreSQL Database
+  # PostgreSQL - Optimized, not removed
   postgres:
-    image: postgres:15
-    restart: always
+    image: postgres:13-alpine
     environment:
+      POSTGRES_DB: amazon_reviews
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: strongpassword
-      POSTGRES_DB: fp_bigdata
+      POSTGRES_PASSWORD: postgres123
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    networks:
-      - default
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+    command: postgres -c max_connections=50 -c shared_buffers=64MB -c effective_cache_size=128MB
 
-  # MinIO Object Storage
+  # MinIO - Full featured, low resource
   minio:
     image: minio/minio:latest
-    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: password123
@@ -33,151 +34,173 @@ services:
       - "9001:9001"
     volumes:
       - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    networks:
-      - default
+    command: server /data --console-address ":9001"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
 
-  # Zookeeper for Kafka
+  # Zookeeper - Optimized
   zookeeper:
-    image: bitnami/zookeeper:3.8 # DIPERBAIKI: Versi dipin untuk stabilitas
+    image: confluentinc/cp-zookeeper:7.4.0
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_HEAP_OPTS: "-Xmx128M -Xms64M"
     ports:
       - "2181:2181"
-    networks:
-      - default
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
 
-  # Kafka Message Broker
+  # Kafka - Low resource but full featured
   kafka:
-    image: bitnami/kafka:3.5
-    environment:
-      - KAFKA_BROKER_ID=1
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,PLAINTEXT_HOST://:29092
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
-    ports:
-      - "9092:9092"
-      - "29092:29092"
+    image: confluentinc/cp-kafka:7.4.0
     depends_on:
       - zookeeper
-    networks:
-      - default
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xms128M"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
 
-  # Spark Master
+  # Spark Master - Full featured, optimized memory
   spark-master:
-    build: ./services/spark_processor # DIPERBAIKI: Build image custom dari Dockerfile
-    command: bin/spark-class org.apache.spark.deploy.master.Master
+    build: ./services/spark_processor
     environment:
       - SPARK_MODE=master
+      - SPARK_MASTER_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m"
+      - SPARK_DAEMON_MEMORY=256m
     ports:
       - "8080:8080"
       - "7077:7077"
     volumes:
       - ./services:/opt/bitnami/spark/services
       - ./data:/opt/bitnami/spark/data
-    networks:
-      - default
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.5'
 
-  # Spark Worker
+  # Spark Worker - Reduced but functional
   spark-worker:
-    build: ./services/spark_processor # DIPERBAIKI: Build image custom dari Dockerfile
+    build: ./services/spark_processor
     command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077
     depends_on:
       - spark-master
     environment:
       - SPARK_MODE=worker
       - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_MEMORY=2G
-      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=512M
+      - SPARK_WORKER_CORES=1
+      - SPARK_WORKER_OPTS="-Xmx512m -XX:MaxMetaspaceSize=128m"
+      - SPARK_EXECUTOR_MEMORY=256m
     volumes:
       - ./services:/opt/bitnami/spark/services
       - ./data:/opt/bitnami/spark/data
-    networks:
-      - default
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '0.5'
 
-  # FastAPI Application
+  # API - Keep hybrid ML, optimize resources
   api:
-    build: .
+    build: ./app
     ports:
       - "8000:8000"
     depends_on:
-      postgres:
-        condition: service_healthy
-      kafka:
-        condition: service_started
+      - postgres
+      - minio
+      - kafka
     volumes:
-      - .:/app
+      - ./app:/app
+      - ./services:/app/services
     environment:
-      DATABASE_URL: postgresql://postgres:strongpassword@postgres:5432/fp_bigdata
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: password123
-      SPARK_MASTER_URL: spark://spark-master:7077
-    # DIPERBAIKI: extra_hosts dihapus untuk memperbaiki koneksi ke Kafka
-    restart: always
+      - PYTHONPATH=/app
+      - LITE_MODE=true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
 
-  # Streamlit Dashboard
+  # Dashboard - Full featured, low resource
   dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile.streamlit
+    build: ./services/dashboard
     ports:
       - "8501:8501"
     depends_on:
       - api
     volumes:
-      - ./dashboard:/app/dashboard
+      - ./services:/app/services
     environment:
+      - LITE_MODE=true
       - API_BASE_URL=http://api:8000
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
 
-  # DITAMBAHKAN: Service untuk streaming data dari MinIO ke Kafka
+  # MinIO Producer - Keep but optimize
   minio-producer:
-    build: .
-    command: python -u services/minio_streamer/producer.py
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: admin
-      MINIO_SECRET_KEY: password123
+    build: ./services/minio_producer
     depends_on:
       - minio
       - kafka
-    networks:
-      - default
-    restart: on-failure
-
-  # DITAMBAHKAN: Service untuk mendengarkan stream dari Kafka
-  stream-consumer:
-    build: .
-    command: python -u services/minio_streamer/consumer.py
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=password123
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - BATCH_SIZE=100
+      - SLEEP_INTERVAL=30
+    volumes:
+      - ./data:/app/data
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.2'
+
+  # Stream Consumer - Keep but lightweight
+  stream-consumer:
+    build: ./services/stream_consumer
     depends_on:
       - kafka
-    networks:
-      - default
-    restart: on-failure
-
-networks:
-  default:
-    name: fp-bigdata-net
+      - postgres
+      - api
+    environment:
+      - KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=amazon_reviews
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - API_BASE_URL=http://api:8000
+      - BATCH_SIZE=50
+      - COMMIT_INTERVAL=10
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.3'
 
 volumes:
   postgres_data:
   minio_data:
-
-### Langkah Selanjutnya
-
-# 1.  **Ganti** seluruh isi `docker-compose.yaml` Anda dengan kode di atas.
-# 2.  **Jalankan ulang** seluruh stack Anda dengan perintah `build` untuk memastikan semua perubahan diterapkan:
-
-#     docker-compose up --build -d
-
-# Setelah ini, seluruh environment Anda sudah dikonfigurasi dengan benar sesuai dengan semua yang telah kita diskusik
