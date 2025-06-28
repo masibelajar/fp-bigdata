@@ -375,26 +375,116 @@ cd ../streaming
 bash test_streaming.sh
 bash ../test_script.sh
 ```
+
+### Infrastructure Status Check
+![Infrastructure Status Check](img/IMG-20250628-WA0018.jpg)
+
+Gambar ini menunjukkan semua container layanan Big Data seperti API, Kafka, Zookeeper, MinIO, Stream Consumer, dan Dashboard sudah dalam status healthy atau running.
+
+### Kafka Consumer Lag Monitoring
+![Kafka Consumer Lag](img/IMG-20250628-WA0019.jpg)
+
+Monitoring lag dari Kafka consumer terhadap setiap partition topic, membantu memantau apakah ada backlog dalam proses konsumsi data streaming.
+
+### Kafka Consumer Group Metrics
+![Kafka Consumer Group Metrics](img/IMG-20250628-WA0020.jpg)
+
+Menampilkan statistik offset lag, throughput, dan processing rate dari masing-masing Kafka Consumer Group.
+
+### Kafka Topic Throughput
+![Kafka Topic Throughput](img/IMG-20250628-WA0021.jpg)
+
+Grafik throughput per topic di Kafka yang menunjukkan seberapa cepat pesan diproduksi ke masing-masing topic.
+
+### Kafka Producer Rate
+![Kafka Producer Rate](img/IMG-20250628-WA0022.jpg)
+
+Menampilkan jumlah messages per second yang dikirimkan oleh Kafka Producer ke broker.
+
+### MinIO Dashboard
+![MinIO Dashboard](img/IMG-20250628-WA0023.jpg)
+
+Visualisasi dashboard MinIO yang menampilkan status bucket, object storage, serta ringkasan penggunaan storage.
+
+### Stream Consumer Processing Rate
+![Stream Consumer Processing Rate](img/IMG-20250628-WA0024.jpg)
+
+Menampilkan tingkat pemrosesan data streaming di Stream Consumer, baik dalam bentuk messages per second atau volume data per menit.
+
+### End-to-End System Test Script
+![End-to-End System Test Script](img/IMG-20250628-WA0025.jpg)
+
+Hasil eksekusi script test_script.sh yang melakukan pengecekan otomatis terhadap semua layanan Big Data Streaming.
+
+### API Health Check
+![API Health Check](img/IMG-20250628-WA0026.jpg)
+
+API memberikan respon status: healthy, menandakan endpoint utama backend berjalan dengan baik.
+
+### API User Recommendations
+![API User Recommendations](img/IMG-20250628-WA0027.jpg)
+
+Response API menampilkan rekomendasi produk yang dipersonalisasi berdasarkan skor prediksi dan kategori produk.
+
+### API Trending Products
+![API Trending Products](img/IMG-20250628-WA0028.jpg)
+
+Menampilkan produk trending berdasarkan trend_score, views_today, dan growth_rate. Produk Electronics dan Kitchen mendominasi.
+
+### API Analytics
+![API Analytics](img/IMG-20250628-WA0029.jpg)
+
+API Analytics menunjukkan total user, active session, funnel conversion rate, user behavior, hingga real-time metrics seperti events_per_second dan recommendations_per_minute.
+
+### API Fallback Recommendations
+![API Fallback Recommendations](img/IMG-20250628-WA0031.jpg)
+
+Response fallback rekomendasi produk jika service utama down, menampilkan dummy products dari kategori Electronics.
+
+### API Not Found - System Metrics
+![API Not Found - System Metrics](img/IMG-20250628-WA0032.jpg)
+
+Contoh error 404 saat mengakses endpoint /system/metrics yang belum tersedia di API.
+
+### API Not Found - User Behavior
+![API Not Found - User Behavior](img/IMG-20250628-WA0033.jpg)
+
+Contoh error 404 saat mengakses endpoint /analytics/user_behavior yang belum tersedia di API.
+
 ### Swagger API Documentation
-![Swagger](img/IMG-20250628-WA0031.jpg)
+![Swagger API](img/IMG-20250628-WA0010.jpg)
 
-### Kafka Consumer - Realtime Events
-![Kafka Consumer](img/IMG-20250628-WA0026.jpg)
+Menampilkan dokumentasi interaktif Swagger UI yang mempermudah eksplorasi semua endpoint REST API backend.
 
-### MinIO Bucket - CSV Review Processed
-![MinIO Processed](img/IMG-20250628-WA0027.jpg)
+### Streamlit Dashboard - Ringkasan Umum
+![Dashboard Summary](img/IMG-20250628-WA0011.jpg)
 
-### MinIO Bucket - Landing Zone Interactions
-![MinIO Interactions](img/IMG-20250628-WA0028.jpg)
+Berisi metrik utama seperti total pengguna, events per second, dan summary performa sistem rekomendasi dalam tampilan interaktif.
 
-### Streaming Recommendation Output
-![Streaming Output](img/IMG-20250628-WA0029.jpg)
+### Streamlit Dashboard - Rekomendasi Produk
+![Product Recommendation View](img/IMG-20250628-WA0012.jpg)
 
-### System Metrics Output
-![System Metrics](img/IMG-20250628-WA0032.jpg)
+Visualisasi real-time rekomendasi yang diberikan kepada user berdasarkan preferensi dan aktivitas.
 
-### CSV Streaming Logs
-![CSV Streaming](img/IMG-20250628-WA0033.jpg)
+### Streamlit Dashboard - Funnel Analytics
+![Funnel Dashboard](img/IMG-20250628-WA0014.jpg)
+
+Menampilkan funnel konversi user dari "view", "click", hingga "purchase" untuk mengevaluasi performa bisnis.
+
+### Streamlit Dashboard - Event Timeline
+![Event Timeline](img/IMG-20250628-WA0015.jpg)
+
+Grafik urutan aktivitas user dari waktu ke waktu, memperlihatkan distribusi interaksi (view, click, purchase).
+
+### Streamlit Dashboard - Active Users Heatmap
+![Active User Heatmap](img/IMG-20250628-WA0016.jpg)
+
+Heatmap interaktif yang memperlihatkan pola aktivitas pengguna sepanjang hari atau minggu.
+
+### Streamlit Dashboard - Trend Analysis
+![Trend Analysis](img/IMG-20250628-WA0017.jpg)
+
+Analisis visual tren produk populer berdasarkan waktu dan kategori, membantu menyusun strategi rekomendasi.
 
 Notes:
 1. Kafka Flow: Aplikasi ini menggunakan Kafka untuk menerima atau mengirim stream data secara real-time. Kafka topic dan broker dikonfigurasi melalui environment variable (.env).
